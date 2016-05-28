@@ -30,8 +30,18 @@ static struct timer_t timer;
  */
 static void timer_callback(void *arg_p)
 {
-    /* Toggle the LED on/off. */
-    pin_toggle(&led);
+	static char pos = 0;
+	if (pos==1) {
+		/* Toggle the LED on/off. */
+		pin_toggle(&led); //Simulate +1
+		time_sleep(250);
+		pin_toggle(&led); //Simulate -1
+		time_sleep(250);
+		pin_toggle(&led); //Simulate 0 (none)
+	}
+	pos++;
+	if (pos>=2)
+		pos=0;
 }
 
 int main()
@@ -55,7 +65,8 @@ int main()
     pin_write(&led, 1);
 
 	timeout.seconds = 0;
-    timeout.nanoseconds = 100000000;	
+    timeout.nanoseconds = 4000000;
+	//timeout.nanoseconds = 100000000;	
 
 	timer_init(&timer,
                &timeout,
