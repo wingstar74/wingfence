@@ -22,9 +22,22 @@
    
 #include "simba.h"
 
+static struct pin_driver_t led;
+static struct timer_t timer;
+
+/**
+ * Timer callback called in interrupt context.
+ */
+static void timer_callback(void *arg_p)
+{
+    /* Toggle the LED on/off. */
+    pin_toggle(&led);
+}
+
 int main()
 {
     struct uart_driver_t uart;
+	struct time_t timeout;
 
     /* Start the system. */
     sys_start();
@@ -36,10 +49,25 @@ int main()
 
     /* Set standard output to the UART. */
     sys_set_stdout(&uart.chout);
+	
+	/* Initialize the LED pin as output and set its value to 1. */
+    pin_init(&led, &pin_led_dev, PIN_OUTPUT);
+    pin_write(&led, 1);
 
+	timeout.seconds = 0;
+    timeout.nanoseconds = 100000000;	
+
+	timer_init(&timer,
+               &timeout,
+               timer_callback,
+               NULL,
+               TIMER_PERIODIC);
+			   
+	timer_start(&timer);
+	
 	while (1) {
 		std_printf(FSTR("Hello world!\n"));
-		thrd_usleep(1000000); 
+		thrd_usleep(1000000);
 	}
 	
 	return (0); 
