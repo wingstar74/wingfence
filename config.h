@@ -25,36 +25,9 @@
 
 
 /* Default system tick frequency. */
-#ifndef SYS_TICK_FREQUENCY
-#    define SYS_TICK_FREQUENCY 250
+#ifndef CONFIG_SYSTEM_TICK_FREQUENCY
+#    define CONFIG_SYSTEM_TICK_FREQUENCY 250
 #endif 
 
-/**
- * Build with assert.
- */
-#ifndef CONFIG_ASSERT
-#    define CONFIG_ASSERT               1
-#endif
-
-/**
- * Stack profiling.
- */
-#ifndef CONFIG_PROFILE_STACK
-#    define CONFIG_PROFILE_STACK        1
-#endif
-
-/**
- * Use a preemptive scheduler.
- */
-#ifndef CONFIG_PREEMPTIVE_SCHEDULER
-#    define CONFIG_PREEMPTIVE_SCHEDULER 0
-#endif
-
-/**
- * Start the monitor thread.
- */
-#ifndef CONFIG_MONITOR_THREAD
-#    define CONFIG_MONITOR_THREAD       1
-#endif
 
 #endif
