@@ -24,7 +24,7 @@
 #define __CONFIG_H__
 
 
-/* Default system tick frequency. */
+/* Wanted system tick 4ms */
 #ifndef CONFIG_SYSTEM_TICK_FREQUENCY
 #    define CONFIG_SYSTEM_TICK_FREQUENCY 250
 #endif 

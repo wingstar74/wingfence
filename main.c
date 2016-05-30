@@ -24,6 +24,8 @@
 
 static struct pin_driver_t led;
 static struct timer_t timer;
+static struct adc_driver_t adc;
+
 
 /**
  * Timer callback called in interrupt context.
@@ -31,12 +33,18 @@ static struct timer_t timer;
 static void timer_callback(void *arg_p)
 {
 	static char pos = 0;
+	
+	
 	if (pos==1) {
+		uint16_t sample;
+		adc_convert_isr(&adc, &sample);
 		/* Toggle the LED on/off. */
 		pin_toggle(&led); //Simulate +1
 		time_sleep(250);
+		adc_convert_isr(&adc, &sample);
 		pin_toggle(&led); //Simulate -1
 		time_sleep(250);
+		adc_convert_isr(&adc, &sample);
 		pin_toggle(&led); //Simulate 0 (none)
 	}
 	pos++;
@@ -64,6 +72,12 @@ int main()
     pin_init(&led, &pin_led_dev, PIN_OUTPUT);
     pin_write(&led, 1);
 
+	adc_init(&adc,
+             &adc_0_dev,
+             &pin_a0_dev,
+             ADC_REFERENCE_VCC,
+             10);
+	
 	timeout.seconds = 0;
     timeout.nanoseconds = 4000000;
 	//timeout.nanoseconds = 100000000;	
@@ -76,6 +90,8 @@ int main()
 			   
 	timer_start(&timer);
 	
+	
+	std_printf(FSTR("%d\r\n"), CONFIG_SYSTEM_TICK_FREQUENCY);
 	while (1) {
 		std_printf(FSTR("Hello world!\n"));
 		thrd_usleep(1000000);
