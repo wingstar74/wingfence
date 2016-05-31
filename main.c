@@ -43,10 +43,14 @@ static int power_consumption_cmd_cb(int argc,
                       void *arg_p,
                       void *call_arg_p)
 {
+	char bOkCopy;
+	sys_lock();
+	bOkCopy = bOk;
+	sys_unlock();
     /* Write the result to the shell output channel. */
     std_fprintf(out_p,
                 FSTR("PulsOk=%s\r\n"),
-                (bOk ? "yes" : "no"));
+                (bOkCopy ? "yes" : "no"));
 
     return (0);
 }
@@ -70,6 +74,9 @@ static void timer_callback(void *arg_p)
 		time_sleep(250);
 		adc_convert_isr(&adc, &sample);
 		pin_toggle(&led); //Simulate 0 (none)
+		
+		//perform diagnostics
+		bOk=(bOk ? 0 : 1);
 	}
 	pos++;
 	if (pos>=2)
@@ -121,6 +128,8 @@ int main()
 	
 	
 	std_printf(FSTR("%d\r\n"), CONFIG_SYSTEM_TICK_FREQUENCY);
+	/* Print the system information. */
+    std_printf(sys_get_info());
 	/*while (1) {
 		std_printf(FSTR("Hello world!\n"));
 		thrd_usleep(1000000);
