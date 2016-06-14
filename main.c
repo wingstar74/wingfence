@@ -23,6 +23,10 @@
 #include "simba.h"
 
 static struct pin_driver_t led;
+
+static struct pin_driver_t pin7;
+static struct pin_driver_t pin8;
+
 static struct timer_t timer;
 static struct adc_driver_t adc;
 /* Define a shell command. */
@@ -31,7 +35,9 @@ static struct shell_args_t shell_args;
 
 
 volatile static char bOk = 1;
-
+volatile static uint16_t sampleHigh=0;
+volatile static uint16_t sampleLow=0;
+volatile static uint16_t sampleNone=0;
 
 /**
  * The shell command callback for "/pc".
@@ -44,14 +50,26 @@ static int power_consumption_cmd_cb(int argc,
                       void *call_arg_p)
 {
 	char bOkCopy;
+	uint16_t sH;
+	uint16_t sL;
+	uint16_t sN;
 	sys_lock();
-	bOkCopy = bOk;
+	//bOkCopy = bOk;
+	sH=sampleHigh;
+	sL=sampleLow;
+	sN=sampleNone;
 	sys_unlock();
     /* Write the result to the shell output channel. */
-    std_fprintf(out_p,
+    /*std_fprintf(out_p,
                 FSTR("PulsOk=%s\r\n"),
-                (bOkCopy ? "yes" : "no"));
-
+                (bOkCopy ? "yes" : "no"));*/
+	/*adc_convert(&adc,
+                &s,
+                1);*/
+	std_fprintf(out_p,
+                FSTR("High=%d\r\nLow=%d\r\nNone=%d\r\n"), sH, sL, sN);
+				
+	 
     return (0);
 }
 
@@ -66,17 +84,28 @@ static void timer_callback(void *arg_p)
 	if (pos==1) {
 		uint16_t sample;
 		adc_convert_isr(&adc, &sample);
-		/* Toggle the LED on/off. */
-		pin_toggle(&led); //Simulate +1
+		sampleNone=sample;
+		
+		pin_write(&pin7, 1);
+		pin_write(&pin8, 0);
 		time_sleep(250);
 		adc_convert_isr(&adc, &sample);
-		pin_toggle(&led); //Simulate -1
+		sampleHigh=sample;
+		
+		pin_write(&pin7, 0);
+		pin_write(&pin8, 1);
 		time_sleep(250);
 		adc_convert_isr(&adc, &sample);
-		pin_toggle(&led); //Simulate 0 (none)
+		sampleLow=sample;
+		
+		//pin_write(&pin7, 0);
+		pin_write(&pin8, 0);
 		
 		//perform diagnostics
 		bOk=(bOk ? 0 : 1);
+		
+		pin_toggle(&led);
+		//csample=sample;
 	}
 	pos++;
 	if (pos>=2)
@@ -103,12 +132,18 @@ int main()
 	/* Initialize the LED pin as output and set its value to 1. */
     pin_init(&led, &pin_led_dev, PIN_OUTPUT);
     pin_write(&led, 1);
+	
+	pin_init(&pin7, &pin_d7_dev, PIN_OUTPUT);
+	pin_write(&pin7, 0);
+	
+	pin_init(&pin8, &pin_d8_dev, PIN_OUTPUT);
+	pin_write(&pin8, 0);
 
 	adc_init(&adc,
              &adc_0_dev,
              &pin_a0_dev,
              ADC_REFERENCE_VCC,
-             10);
+             1);
 	
 	timeout.seconds = 0;
     timeout.nanoseconds = 4000000;
